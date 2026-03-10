@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="bg">
+<h1 style="font-family: 'Nunito', sans-serif; font-size: 48px; font-weight: 900; text-align: center;">
+  <span style="color:#ff3b30;">И</span>
+  <span style="color:#007aff;">г</span>
+  <span style="color:#34c759;">р</span>
+  <span style="color:#ff9500;">а</span>
+  <span style="color:#ff3b30;">й</span>
+  <span>&nbsp;</span>
+  <span style="color:#007aff;">н</span>
+  <span style="color:#34c759;">а</span>
+  <span>&nbsp;</span>
+  <span style="color:#ff9500;">M</span>
+  <span style="color:#ff3b30;">A</span>
+  <span style="color:#007aff;">X</span>
+  <span style="color:#34c759;">!</span>
+</h1>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+
+<head>
+<meta charset="UTF-8">
+<title>Математическо Jeopardy</title>
+<style>
+    body{ font-family:Arial, sans-serif; background:#f4efe9; text-align:center; margin:0; padding:10px; overflow-x: hidden; }
+    h1{ font-size: 22px; margin: 5px 0; color: #2c3e50; }
+
+    .menu { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+    .menu button { padding: 6px 12px; border-radius: 15px; border: 1px solid #999; background: white; cursor: pointer; font-size: 13px; }
+
+    .main-container { display: flex; flex-wrap: nowrap; justify-content: center; gap: 15px; max-width: 1400px; margin: auto; }
+    .game-area { flex: 3; min-width: 800px; }
+
+    #teams { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; flex-wrap: nowrap; }
+    .team { background: white; border-radius: 10px; padding: 8px 4px; width: 92px; border: 2px solid #34495e; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .team b { font-size: 11px; display: block; white-space: nowrap; }
+    .score-val { font-size: 18px; color: #e67e22; font-weight: bold; margin: 3px 0; }
+    .team button { width: 26px; height: 26px; font-size: 14px; cursor: pointer; border-radius: 4px; border: 1px solid #ddd; padding: 0; }
+
+    .leaderboard-area { flex: 0 0 180px; background: #fff; border-radius: 15px; padding: 12px; border: 2px solid #2980b9; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: fit-content; margin-top: 108px; }
+    .leaderboard-area h2 { font-size: 15px; color: #2980b9; margin: 0 0 8px 0; }
+    .leaderboard-item { display: flex; justify-content: space-between; padding: 5px 8px; border-bottom: 1px solid #eee; font-weight: bold; font-size: 13px; }
+
+    .board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .category { color: white; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 12px; min-height: 40px; display: flex; align-items: center; justify-content: center; line-height: 1.2; }
+    .red{background:#e74c3c;} .blue{background:#3498db;} .green{background:#27ae60;} .orange{background:#f39c12;} .purple{background:#9b59b6;}
+    .cell { background: #fff; border-radius: 8px; padding: 12px 0; font-size: 20px; font-weight: bold; cursor: pointer; border: 1px solid #bdc3c7; }
+    .cell:hover { background: #f9f9f9; }
+
+    #popup, #teacherPanel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 3000; }
+    #popupContent, #teacherBox { background: white; padding: 30px; border-radius: 20px; width: 85%; max-width: 650px; position: relative; min-height: 250px; display: flex; flex-direction: column; }
+    
+    /* ТАЙМЕР - ПРЕМЕСТЕН В ДОЛНИЯ ДЕСЕН ЪГЪЛ */
+    #bigTimerWrapper { position: absolute; bottom: 20px; right: 20px; display: none; }
+    #bigTimerCircle { width: 70px; height: 70px; border-radius: 50%; background: #000; color: #f1c40f; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; border: 4px solid #f1c40f; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+
+    #question { font-size: 24px; text-align: left; line-height: 1.5; margin-bottom: 25px; flex-grow: 1; }
+    #answer { font-size: 22px; color: #27ae60; font-weight: bold; display: none; margin: 15px 0; padding: 10px; background: #f0fff0; border-radius: 10px; }
+    
+    #loseOverlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0, 0, 0, 0.9); color: #ff0000; display: none; 
+        flex-direction: column; align-items: center; justify-content: center; 
+        font-size: 70px; font-weight: bold; z-index: 10000; text-align: center;
+        animation: pulse 0.5s infinite alternate;
+    }
+    @keyframes pulse { from { transform: scale(1); opacity: 1; } to { transform: scale(1.1); opacity: 0.8; } }
+</style>
+</head>
+<body>
+
+<h1>Математическо Jeopardy</h1>
+
+<div class="menu">
+    <button onclick="showTeacherPanel()">🎓 Учителски панел</button>
+    <button onclick="if(confirm('Изчистване на резултатите?')) { localStorage.clear(); location.reload(); }">↻ Нова игра</button>
+</div>
+
+<div class="main-container">
+    <div class="game-area">
+        <div id="teams"></div>
+        <div class="board" id="board"></div>
+    </div>
+    <div class="leaderboard-area">
+        <h2>🏆 Класиране</h2>
+        <div id="leaderboardList"></div>
+    </div>
+</div>
+
+<div id="popup">
+    <div id="popupContent">
+        <div id="question"></div>
+        <div id="answer"></div>
+        
+        <div style="margin-bottom: 20px; text-align: left;">
+            <button onclick="startTimer(15)">15 сек</button>
+            <button onclick="startTimer(30)">30 сек</button>
+            <button onclick="startTimer(60)">1 мин</button>
+            <button onclick="startTimer(120)">2 мин</button>
+        </div>
+
+        <div style="text-align: left;">
+            <button id="showAnsBtn" style="padding:10px 20px;" onclick="document.getElementById('answer').style.display='block'">Покажи отговор</button>
+            <button style="margin-left:10px;" onclick="closePopup()">Затвори</button>
+        </div>
+
+        <div id="bigTimerWrapper"><div id="bigTimerCircle"><span id="bigTimerText">0</span></div></div>
+    </div>
+</div>
+
+<div id="teacherPanel">
+    <div id="teacherBox">
+        <h2>Настройки</h2>
+        <button onclick="resetScores()">Нулирай точките</button>
+        <button onclick="localStorage.clear(); location.reload();">Изчисти дъската</button>
+        <br><br>
+        <button onclick="document.getElementById('teacherPanel').style.display='none'">Затвори</button>
+    </div>
+</div>
+
+<div id="loseOverlay">ГУБИШ 100 ТОЧКИ!</div>
+
+<script>
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioCtx();
+
+function playTick() {
+    try {
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = "sine"; osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    } catch(e) {}
+}
+
+function playBoom() {
+    try {
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = "square"; osc.frequency.setValueAtTime(60, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 1.5);
+    } catch(e) {}
+}
+
+const categories = [
+    {title:"Рационални числа", color:"red"}, {title:"Степенуване", color:"blue"},
+    {title:"Уравнения", color:"green"}, {title:"Пропорции", color:"orange"},
+    {title:"Вероятности", color:"purple"}
+];
+
+const questions = [
+    [
+        ["-(2,4 + 8,2) . (-5)", "53"],
+        ["Стойността на израза M = – 4.|3 – 8| – 2.|5 – 4| е?", "-22"],
+        ["Стойността на израза 2,25 + 0,75. (-4/3) е?", "1,25"],
+        ["Коя е стойността на израза 2(3 – c) – c(c – 2) при c = – 3?", "-3"],
+        ["Стойността на израза x(x + 4) – x(x + 3) - 5x - 1 при х= -1 е?", "3"]
+    ],
+    [
+        ["-2<sup>-2</sup> + 0,25", "0"],
+        ["(2022<sup>74</sup> - 2022<sup>73</sup>) : 2022<sup>73</sup>", "2021"],
+        ["Колко е хипотенузата на правоъгълен триъгълник с катети 30 мм и 0,4 дм?", "5 см"],
+        ["(21<sup>2</sup> . 15<sup>-4</sup> . 25<sup>2</sup>) / 49 . 9<sup>-3</sup>", "81"],
+        ["В правоъгълен триъгълник с катети 8cm и 15 cm. Намерете височината към хипотенузата му с точност до стотните!", "7,06 см"]
+    ],
+    [
+        ["Първоначалната такса в такси е 1,50 евро. За всеки км се заплаща 1,05 евро. Кой израз представя сумата при x км?", "1,50 + 1,05x"],
+        ["На опашка са наредени 37 човека. Хората след Кремена са 3 пъти повече от тези преди нея. На кое място е тя?", "На 10-то място"],
+        ["Днес Мими е на 18 г. След 3 г. сумата от годините на Мими и Катя ще е 30. След колко години Катя ще е на 12?", "6"],
+        ["В склад А има 4 пъти повече книги от Б. Ако от А извадят 6000, а в Б добавят 3000, стават поравно. Колко са били?", "I: 12000, II: 3000"],
+        ["Разстоянието между две гари е 334 km. От тях тръгват едновременно един срещу друг два влака и се срещат след 2 часа. Скоростта на единия влак е със 7 km/h по-висока от тази на другия. Намерете скоростите на двата влака.", "80 km/h и 87 km/h"]
+    ],
+    [
+        ["Багер изкопава дължина от 12km   за 4 часа. За колко часа багерът  ще  изкопае  24 km ,ако копае със същата  скорост?", "8"],
+        ["Бронзът е сплав от мед и калай. В 600 тона бронз,медта е  360  тона. Колко  мед   има  в   420  тона  бронз?", "252 тона"],
+        ["С вашата  лека  кола ,на всеки 200 километра, зареждате по 18 литра бензин. Ако се движите  със същата скорост, намерете колко евро ще са Ви необходими за да изминете път от  450 километра, ако цената на  литър бензин е   2 евро?", "81 евро"],
+        ["При чертане на карта се работи с мащаб  1:20 000 000. Ако на картата  разтоянието  между два града е отсечка с  дължина от  3,2 cm , то намерете действителното   разстояние  между градовете.", "640 km"],
+        ["В  едно училище  отношението на момчетата към момичетата  е 6:4. Дошли още 20  момичета  и броят на   момичетата  станал  равен  на броя на момчетата. Колко са били първоначално   децата   в това училище?", "100"]
+    ],
+    [
+        ["Каква е вероятността при хвърляне на стандартен зар (с числата от 1  до 6 ) да се падне число, по-голямо от 4?", "1/3"],
+        ["Дадено е едно двуцифрено число, което е точен квадрат. Каква е вероятността това число да е по-малко от 50?", "2/3"],
+        ["Средният успех на Иван от 4 предмета е 5,50. По пети предмет той получава оценка 4,00. Какъв е средният му успех от петте предмета?", "5,20"],
+        ["Една монета хвърляме два пъти. Каква е вероятността и двата пъти монетата да падне върху лицевата си страна?", "1/4"],
+        ["Да се пресметне вероятността за падането на два едновременно хвърлени зара върху едни и същи стени", "1/6"]
+    ]
+];
+
+let teamData = Array(7).fill(0).map((_, i) => ({ name: `Отбор ${i+1}`, score: 0 }));
+
+function initBoard() {
+    const b = document.getElementById("board"); b.innerHTML = "";
+    categories.forEach(c => b.innerHTML += `<div class="category ${c.color}">${c.title}</div>`);
+    for(let r=0; r<5; r++) {
+        for(let c=0; c<5; c++) {
+            b.innerHTML += `<div class="cell" onclick="openQ(${c},${r},this)">${(r+1)*100}</div>`;
+        }
+    }
+}
+
+function drawTeams() {
+    const t = document.getElementById("teams"); t.innerHTML = "";
+    teamData.forEach((td, i) => {
+        t.innerHTML += `<div class="team"><b>Отбор ${i+1}</b><div class="score-val" id="s${i}">${td.score}</div>
+        <button onclick="changeS(${i},100)">+</button><button onclick="changeS(${i},-100)">-</button></div>`;
+    });
+    updateLeaderboard();
+}
+
+function changeS(i, v) { 
+    teamData[i].score += v; 
+    document.getElementById("s"+i).innerText = teamData[i].score;
+    updateLeaderboard();
+}
+
+function updateLeaderboard() {
+    const list = document.getElementById("leaderboardList");
+    const sorted = [...teamData].sort((a, b) => b.score - a.score);
+    list.innerHTML = sorted.map(t => `<div class="leaderboard-item"><span>${t.name}</span><span>${t.score}</span></div>`).join("");
+}
+
+function openQ(c, r, el) {
+    document.getElementById("question").innerHTML = questions[c][r][0];
+    document.getElementById("answer").innerHTML = "Отговор: " + questions[c][r][1];
+    document.getElementById("answer").style.display = "none";
+    document.getElementById("popup").style.display = "flex";
+    el.style.visibility = "hidden";
+}
+
+function closePopup() { document.getElementById("popup").style.display = "none"; stopTimer(); }
+function showTeacherPanel() { document.getElementById("teacherPanel").style.display = "flex"; }
+function resetScores() { teamData.forEach(t => t.score = 0); drawTeams(); document.getElementById("teacherPanel").style.display = "none"; }
+
+let tInt;
+function startTimer(sec) {
+    stopTimer(); 
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    document.getElementById("bigTimerWrapper").style.display = "block";
+    let left = sec; document.getElementById("bigTimerText").innerText = left;
+    tInt = setInterval(() => {
+        left--; 
+        document.getElementById("bigTimerText").innerText = left;
+        if(left > 0) playTick();
+        if(left <= 0) { 
+            clearInterval(tInt); playBoom();
+            document.getElementById("loseOverlay").style.display = "flex"; 
+            setTimeout(() => { document.getElementById("loseOverlay").style.display = "none"; closePopup(); }, 3500);
+            document.getElementById("bigTimerWrapper").style.display = "none";
+        }
+    }, 1000);
+}
+function stopTimer() { clearInterval(tInt); document.getElementById("bigTimerWrapper").style.display = "none"; }
+
+initBoard(); drawTeams();
+</script>
+</body>
+</html>
