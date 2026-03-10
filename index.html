@@ -65,6 +65,32 @@
         animation: pulse 0.5s infinite alternate;
     }
     @keyframes pulse { from { transform: scale(1); opacity: 1; } to { transform: scale(1.1); opacity: 0.8; } }
+#jumping-pi {
+  font-size: 120px;        /* по-голямо π */
+  font-weight: bold;
+  color: #8b0000;
+  text-align: center;
+  margin-top: 40px;
+  animation: walk 4s infinite linear, jump 1s infinite ease-in-out;
+  position: relative;
+}
+
+/* подскачане */
+@keyframes jump {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(-30px); }
+  60%  { transform: translateY(0); }
+  80%  { transform: translateY(-15px); }
+  100% { transform: translateY(0); }
+}
+
+/* ходене наляво–надясно */
+@keyframes walk {
+  0%   { left: -40px; }
+  50%  { left: 40px; }
+  100% { left: -40px; }
+}
+
 </style>
 </head>
 <body>
@@ -257,5 +283,7 @@ function stopTimer() { clearInterval(tInt); document.getElementById("bigTimerWra
 
 initBoard(); drawTeams();
 </script>
+<div id="jumping-pi">π</div>
 </body>
+
 </html>
